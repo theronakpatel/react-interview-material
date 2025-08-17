@@ -14,13 +14,16 @@
 ### 4. "How do you optimize React performance?"
 **Answer**: "I use several strategies: React.memo for component memoization, useMemo for expensive calculations, useCallback for function memoization, and React.lazy for code splitting. I also implement virtual scrolling for large lists, optimize bundle size with tree shaking, and use React DevTools Profiler to identify bottlenecks. For example, in a trading dashboard, I'd memoize chart components and use virtual scrolling for stock lists."
 
-### 5. "Explain state management in Vue 3"
+### 5. "What's the difference between useMemo and useCallback?"
+**Answer**: "useMemo and useCallback are both memoization hooks, but they serve different purposes. useMemo memoizes the result of expensive calculations - it returns a value and only recalculates when dependencies change. For example, useMemo(() => expensiveCalculation(data), [data]) returns the calculated result. useCallback memoizes functions - it returns the same function reference unless dependencies change. For example, useCallback(() => handleClick(id), [id]) returns the same function reference. The key difference: useMemo is for values, useCallback is for functions. I use useMemo when I have expensive calculations like filtering/sorting large datasets, and useCallback when passing functions as props to prevent child components from re-rendering unnecessarily."
+
+### 6. "Explain state management in Vue 3"
 **Answer**: "Vue 3 offers multiple approaches. The Composition API with reactive() and ref() for local state, Pinia for global state management with better TypeScript support than Vuex, and provide/inject for dependency injection. For a trading app, I'd use Pinia to manage user portfolio, watchlist, and real-time stock data, with reactive() for component-specific state like form inputs."
 
-### 6. "How do you handle real-time data in a frontend application?"
+### 7. "How do you handle real-time data in a frontend application?"
 **Answer**: "I use WebSocket connections for real-time updates, implement connection pooling and reconnection logic, use debouncing for rapid updates, and implement optimistic UI updates. For error handling, I use error boundaries and fallback states. In a trading context, I'd also implement data validation, handle connection failures gracefully, and use service workers for offline functionality."
 
-### 7. "What's your approach to testing frontend applications?"
+### 8. "What's your approach to testing frontend applications?"
 **Answer**: "I use a testing pyramid: unit tests for components and utilities, integration tests for user flows, and E2E tests for critical paths. I use Jest for unit testing, React Testing Library for component testing, and Cypress for E2E. I also implement visual regression testing and performance testing. For a trading app, I'd focus on testing real-time data handling, form validations, and error scenarios."
 
 ## System Design Questions
