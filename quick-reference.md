@@ -8,16 +8,19 @@
 ### 2. "Explain the Virtual DOM in React"
 **Answer**: "The Virtual DOM is a lightweight copy of the actual DOM. When state changes, React creates a new Virtual DOM tree, compares it with the previous one (diffing), and updates only the necessary parts of the real DOM. This makes React efficient by minimizing expensive DOM operations. For example, if I have a list of 1000 items and only one changes, React will only update that specific item instead of re-rendering the entire list."
 
-### 3. "How do you optimize React performance?"
+### 3. "What is memoization?"
+**Answer**: "Memoization is like remembering the answer to a math problem so you don't have to calculate it again. It's a technique where you store the result of expensive calculations and return the cached result when the same inputs occur again. For example, if you calculate the factorial of 5 (which is 120), you save that result. Next time someone asks for factorial of 5, instead of calculating 5×4×3×2×1 again, you just return 120 from memory. In React, we use useMemo and useCallback for memoization. useMemo caches expensive calculations, and useCallback caches functions to prevent unnecessary re-renders of child components."
+
+### 4. "How do you optimize React performance?"
 **Answer**: "I use several strategies: React.memo for component memoization, useMemo for expensive calculations, useCallback for function memoization, and React.lazy for code splitting. I also implement virtual scrolling for large lists, optimize bundle size with tree shaking, and use React DevTools Profiler to identify bottlenecks. For example, in a trading dashboard, I'd memoize chart components and use virtual scrolling for stock lists."
 
-### 4. "Explain state management in Vue 3"
+### 5. "Explain state management in Vue 3"
 **Answer**: "Vue 3 offers multiple approaches. The Composition API with reactive() and ref() for local state, Pinia for global state management with better TypeScript support than Vuex, and provide/inject for dependency injection. For a trading app, I'd use Pinia to manage user portfolio, watchlist, and real-time stock data, with reactive() for component-specific state like form inputs."
 
-### 5. "How do you handle real-time data in a frontend application?"
+### 6. "How do you handle real-time data in a frontend application?"
 **Answer**: "I use WebSocket connections for real-time updates, implement connection pooling and reconnection logic, use debouncing for rapid updates, and implement optimistic UI updates. For error handling, I use error boundaries and fallback states. In a trading context, I'd also implement data validation, handle connection failures gracefully, and use service workers for offline functionality."
 
-### 6. "What's your approach to testing frontend applications?"
+### 7. "What's your approach to testing frontend applications?"
 **Answer**: "I use a testing pyramid: unit tests for components and utilities, integration tests for user flows, and E2E tests for critical paths. I use Jest for unit testing, React Testing Library for component testing, and Cypress for E2E. I also implement visual regression testing and performance testing. For a trading app, I'd focus on testing real-time data handling, form validations, and error scenarios."
 
 ## System Design Questions
@@ -33,16 +36,13 @@
 ### 1. "How do you take ownership of frontend systems?"
 **Answer**: "I start by understanding business requirements and user needs. I create technical roadmaps, establish coding standards, implement monitoring and alerting, and mentor junior developers. I regularly communicate with stakeholders, track KPIs, and proactively identify and address technical debt. For example, at my last role, I took ownership of a slow dashboard and improved performance by 70% through optimization."
 
-### 2. "What is memoization?"
-**Answer**: "Memoization is like remembering the answer to a math problem so you don't have to calculate it again. It's a technique where you store the result of expensive calculations and return the cached result when the same inputs occur again. For example, if you calculate the factorial of 5 (which is 120), you save that result. Next time someone asks for factorial of 5, instead of calculating 5×4×3×2×1 again, you just return 120 from memory. In React, we use useMemo and useCallback for memoization. useMemo caches expensive calculations, and useCallback caches functions to prevent unnecessary re-renders of child components."
-
-### 3. "Describe a complex technical challenge you solved"
+### 2. "Describe a complex technical challenge you solved"
 **Answer**: "I optimized a trading dashboard that was slow with real-time data. The challenge was handling 10,000+ stock symbols with live updates. I implemented virtual scrolling, memoization, WebSocket connection pooling, and data normalization. I also added performance monitoring and error boundaries. The result was 70% faster load times and better user experience."
 
-### 4. "How do you work with design and product teams?"
+### 3. "How do you work with design and product teams?"
 **Answer**: "I involve myself early in the design process, asking questions about user flows and technical constraints. I provide feedback on feasibility and suggest improvements based on technical capabilities. I use tools like Figma for collaboration and create prototypes to validate ideas. I also ensure the final implementation matches the design while maintaining performance and accessibility."
 
-### 5. "How do you handle conflicting requirements?"
+### 4. "How do you handle conflicting requirements?"
 **Answer**: "I gather all stakeholders to understand the root cause of conflicts. I present data-driven solutions and explain trade-offs. I prioritize based on business impact and user needs. For example, if there's a conflict between adding features and performance, I'd propose a phased approach or find ways to optimize existing code to accommodate both."
 
 ## Problem-Solving Questions
