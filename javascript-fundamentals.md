@@ -264,36 +264,62 @@ market.updateStockPrice('AAPL', 155); // Triggers alert
 
 ---
 
-## Promises
+## Promises - Deep Dive
 
-**Promises** represent the eventual completion (or failure) of an asynchronous operation.
+**Promises** represent the eventual completion (or failure) of an asynchronous operation. Think of them as a contract that says "I promise to give you a result later."
 
 ### **Promise States:**
-- **Pending**: Initial state
-- **Fulfilled**: Operation completed successfully
-- **Rejected**: Operation failed
+- **Pending**: Initial state (waiting for result)
+- **Fulfilled**: Operation completed successfully (got the result)
+- **Rejected**: Operation failed (got an error)
+
+### **How Promises Work:**
+```javascript
+// Promise constructor takes a function with resolve and reject
+const myPromise = new Promise((resolve, reject) => {
+  // Do some async work
+  const success = Math.random() > 0.5;
+  
+  if (success) {
+    resolve('Operation succeeded!'); // Promise is fulfilled
+  } else {
+    reject('Operation failed!'); // Promise is rejected
+  }
+});
+
+// Using the promise
+myPromise
+  .then(result => console.log('Success:', result))
+  .catch(error => console.log('Error:', error));
+```
 
 ### **Example: Stock API with Promises**
 ```javascript
 function fetchStockPrice(symbol) {
   return new Promise((resolve, reject) => {
-    fetch(`/api/stocks/${symbol}`)
-      .then(response => {
-        if (!response.ok) {
-          throw new Error('Stock not found');
-        }
-        return response.json();
-      })
-      .then(data => resolve(data.price))
-      .catch(error => reject(error));
+    // Simulate API call
+    setTimeout(() => {
+      const stockData = {
+        AAPL: { price: 150.25, change: 2.5 },
+        GOOGL: { price: 2800.50, change: -1.2 },
+        MSFT: { price: 320.75, change: 0.8 }
+      };
+      
+      if (stockData[symbol]) {
+        resolve(stockData[symbol]);
+      } else {
+        reject(new Error(`Stock ${symbol} not found`));
+      }
+    }, 1000); // Simulate network delay
   });
 }
 
 // Usage
 fetchStockPrice('AAPL')
-  .then(price => {
-    console.log('Apple stock price:', price);
-    updatePriceDisplay(price);
+  .then(stockData => {
+    console.log('Apple stock price:', stockData.price);
+    console.log('Price change:', stockData.change + '%');
+    updatePriceDisplay(stockData);
   })
   .catch(error => {
     console.error('Error fetching price:', error);
@@ -307,10 +333,10 @@ function fetchMultipleStockPrices(symbols) {
   const promises = symbols.map(symbol => fetchStockPrice(symbol));
   
   return Promise.all(promises)
-    .then(prices => {
+    .then(stockDataArray => {
       const stockData = symbols.map((symbol, index) => ({
         symbol,
-        price: prices[index]
+        ...stockDataArray[index]
       }));
       return stockData;
     });
@@ -320,9 +346,238 @@ function fetchMultipleStockPrices(symbols) {
 fetchMultipleStockPrices(['AAPL', 'GOOGL', 'MSFT'])
   .then(stocks => {
     stocks.forEach(stock => {
-      console.log(`${stock.symbol}: $${stock.price}`);
+      console.log(`${stock.symbol}: $${stock.price} (${stock.change}%)`);
+    });
+  })
+  .catch(error => {
+    console.error('Error fetching multiple stocks:', error);
+  });
+```
+
+### **Promise.race() - First to Complete**
+```javascript
+function fetchStockWithTimeout(symbol, timeout = 5000) {
+  const stockPromise = fetchStockPrice(symbol);
+  const timeoutPromise = new Promise((_, reject) => {
+    setTimeout(() => reject(new Error('Request timeout')), timeout);
+  });
+  
+  return Promise.race([stockPromise, timeoutPromise]);
+}
+
+// Usage
+fetchStockWithTimeout('AAPL', 3000)
+  .then(stockData => {
+    console.log('Stock data received:', stockData);
+  })
+  .catch(error => {
+    console.error('Request failed:', error.message);
+  });
+```
+
+### **Promise.allSettled() - Wait for All (Success or Failure)**
+```javascript
+function fetchAllStockData(symbols) {
+  const promises = symbols.map(symbol => 
+    fetchStockPrice(symbol)
+      .then(data => ({ status: 'fulfilled', value: data }))
+      .catch(error => ({ status: 'rejected', reason: error }))
+  );
+  
+  return Promise.allSettled(promises);
+}
+
+// Usage
+fetchAllStockData(['AAPL', 'INVALID', 'GOOGL'])
+  .then(results => {
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        console.log(`${symbols[index]}: Success`, result.value);
+      } else {
+        console.log(`${symbols[index]}: Failed`, result.reason);
+      }
     });
   });
+```
+
+### **Promise.any() - First Success**
+```javascript
+function fetchStockFromMultipleSources(symbol) {
+  const sources = [
+    fetchStockPrice(symbol),
+    fetchStockPriceFromBackup(symbol),
+    fetchStockPriceFromCache(symbol)
+  ];
+  
+  return Promise.any(sources);
+}
+
+// Usage
+fetchStockFromMultipleSources('AAPL')
+  .then(stockData => {
+    console.log('Stock data from fastest source:', stockData);
+  })
+  .catch(error => {
+    console.error('All sources failed:', error);
+  });
+```
+
+### **Promise Chaining - Complex Operations**
+```javascript
+function processStockOrder(symbol, quantity) {
+  return fetchStockPrice(symbol)
+    .then(stockData => {
+      console.log('Stock price fetched:', stockData.price);
+      return { ...stockData, quantity };
+    })
+    .then(orderData => {
+      const totalCost = orderData.price * orderData.quantity;
+      console.log('Total cost:', totalCost);
+      return { ...orderData, totalCost };
+    })
+    .then(orderData => {
+      return checkUserBalance(orderData.totalCost)
+        .then(hasBalance => ({ ...orderData, hasBalance }));
+    })
+    .then(orderData => {
+      if (orderData.hasBalance) {
+        return placeOrder(orderData);
+      } else {
+        throw new Error('Insufficient balance');
+      }
+    })
+    .then(orderResult => {
+      console.log('Order placed successfully:', orderResult);
+      return orderResult;
+    })
+    .catch(error => {
+      console.error('Order failed:', error.message);
+      throw error; // Re-throw to be handled by caller
+    });
+}
+
+// Usage
+processStockOrder('AAPL', 10)
+  .then(result => {
+    console.log('Order completed:', result);
+  })
+  .catch(error => {
+    console.error('Order processing failed:', error);
+  });
+```
+
+### **Error Handling Patterns**
+```javascript
+// 1. Individual error handling
+fetchStockPrice('AAPL')
+  .then(stockData => {
+    // Handle success
+    return stockData;
+  })
+  .catch(error => {
+    // Handle specific error
+    console.error('Stock fetch failed:', error);
+    return { price: 0, change: 0 }; // Fallback data
+  });
+
+// 2. Global error handling
+function fetchStockWithGlobalErrorHandling(symbol) {
+  return fetchStockPrice(symbol)
+    .then(stockData => {
+      if (!stockData.price) {
+        throw new Error('Invalid stock data');
+      }
+      return stockData;
+    });
+}
+
+// 3. Error recovery
+function fetchStockWithRetry(symbol, maxRetries = 3) {
+  return new Promise((resolve, reject) => {
+    let attempts = 0;
+    
+    function attempt() {
+      fetchStockPrice(symbol)
+        .then(resolve)
+        .catch(error => {
+          attempts++;
+          if (attempts < maxRetries) {
+            console.log(`Retry ${attempts} for ${symbol}`);
+            setTimeout(attempt, 1000 * attempts); // Exponential backoff
+          } else {
+            reject(error);
+          }
+        });
+    }
+    
+    attempt();
+  });
+}
+```
+
+### **Converting Callbacks to Promises**
+```javascript
+// Old callback-based function
+function fetchStockPriceCallback(symbol, callback) {
+  setTimeout(() => {
+    const stockData = {
+      AAPL: { price: 150.25, change: 2.5 },
+      GOOGL: { price: 2800.50, change: -1.2 }
+    };
+    
+    if (stockData[symbol]) {
+      callback(null, stockData[symbol]);
+    } else {
+      callback(new Error(`Stock ${symbol} not found`), null);
+    }
+  }, 1000);
+}
+
+// Convert to Promise
+function fetchStockPricePromise(symbol) {
+  return new Promise((resolve, reject) => {
+    fetchStockPriceCallback(symbol, (error, data) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(data);
+      }
+    });
+  });
+}
+
+// Usage
+fetchStockPricePromise('AAPL')
+  .then(data => console.log('Success:', data))
+  .catch(error => console.error('Error:', error));
+```
+
+### **Promise Utilities**
+```javascript
+// Delay utility
+function delay(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+// Usage
+delay(2000).then(() => {
+  console.log('2 seconds have passed');
+});
+
+// Timeout utility
+function timeout(promise, ms) {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => 
+      setTimeout(() => reject(new Error('Timeout')), ms)
+    )
+  ]);
+}
+
+// Usage
+timeout(fetchStockPrice('AAPL'), 3000)
+  .then(data => console.log('Data received:', data))
+  .catch(error => console.error('Request failed:', error));
 ```
 
 ---
