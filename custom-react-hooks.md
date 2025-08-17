@@ -41,9 +41,10 @@ function useLocalStorage<T>(key: string, initialValue: T) {
 }
 
 // Example Usage:
-function UserProfile() {
+function TradingDashboard() {
   const [username, setUsername] = useLocalStorage('username', 'Guest');
   const [theme, setTheme] = useLocalStorage('theme', 'light');
+  const [defaultStock, setDefaultStock] = useLocalStorage('defaultStock', 'AAPL');
 
   return (
     <div>
@@ -55,7 +56,12 @@ function UserProfile() {
       <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
         Switch to {theme === 'light' ? 'Dark' : 'Light'} Mode
       </button>
-      <p>Hello, {username}!</p>
+      <input 
+        value={defaultStock} 
+        onChange={(e) => setDefaultStock(e.target.value)} 
+        placeholder="Default stock symbol"
+      />
+      <p>Welcome back, {username}! Your default stock is {defaultStock}</p>
     </div>
   );
 }
@@ -88,14 +94,14 @@ function useDebounce<T>(value: T, delay: number): T {
 }
 
 // Example Usage:
-function SearchComponent() {
+function StockSearchComponent() {
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearchTerm = useDebounce(searchTerm, 500); // Wait 500ms
 
   useEffect(() => {
     if (debouncedSearchTerm) {
-      // Only search after user stops typing for 500ms
-      searchAPI(debouncedSearchTerm);
+      // Only search stocks after user stops typing for 500ms
+      searchStocksAPI(debouncedSearchTerm);
     }
   }, [debouncedSearchTerm]);
 
@@ -104,7 +110,7 @@ function SearchComponent() {
       type="text"
       value={searchTerm}
       onChange={(e) => setSearchTerm(e.target.value)}
-      placeholder="Search..."
+      placeholder="Search stocks..."
     />
   );
 }
@@ -148,21 +154,29 @@ function useWindowSize(): WindowSize {
 }
 
 // Example Usage:
-function ResponsiveComponent() {
+function ResponsiveTradingDashboard() {
   const { width, height } = useWindowSize();
 
   return (
     <div>
-      <h2>Window Size</h2>
-      <p>Width: {width}px</p>
-      <p>Height: {height}px</p>
+      <h2>Trading Dashboard</h2>
+      <p>Screen: {width}px × {height}px</p>
       
       {width < 768 ? (
-        <p>📱 Mobile view</p>
+        <div>
+          <p>📱 Mobile Trading View</p>
+          <p>Simplified charts and essential trading functions</p>
+        </div>
       ) : width < 1024 ? (
-        <p>💻 Tablet view</p>
+        <div>
+          <p>💻 Tablet Trading View</p>
+          <p>Medium charts with full trading capabilities</p>
+        </div>
       ) : (
-        <p>🖥️ Desktop view</p>
+        <div>
+          <p>🖥️ Desktop Trading View</p>
+          <p>Full charts, multiple watchlists, and advanced tools</p>
+        </div>
       )}
     </div>
   );
@@ -199,21 +213,23 @@ function useClickOutside(callback: () => void) {
 }
 
 // Example Usage:
-function DropdownMenu() {
+function StockFilterDropdown() {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useClickOutside(() => setIsOpen(false));
 
   return (
     <div ref={dropdownRef} className="dropdown">
       <button onClick={() => setIsOpen(!isOpen)}>
-        Menu ▼
+        Filter Stocks ▼
       </button>
       
       {isOpen && (
         <div className="dropdown-menu">
-          <a href="#">Profile</a>
-          <a href="#">Settings</a>
-          <a href="#">Logout</a>
+          <a href="#">Technology</a>
+          <a href="#">Healthcare</a>
+          <a href="#">Finance</a>
+          <a href="#">Energy</a>
+          <a href="#">All Sectors</a>
         </div>
       )}
     </div>
@@ -255,15 +271,15 @@ function useOnlineStatus(): boolean {
 }
 
 // Example Usage:
-function ConnectionStatus() {
+function TradingConnectionStatus() {
   const isOnline = useOnlineStatus();
 
   return (
     <div className={`status ${isOnline ? 'online' : 'offline'}`}>
       {isOnline ? (
-        <span>🟢 You are online</span>
+        <span>🟢 Live trading data available</span>
       ) : (
-        <span>🔴 You are offline</span>
+        <span>🔴 Offline mode - using cached data</span>
       )}
     </div>
   );
@@ -289,23 +305,23 @@ function usePrevious<T>(value: T): T | undefined {
 }
 
 // Example Usage:
-function Counter() {
-  const [count, setCount] = useState(0);
-  const previousCount = usePrevious(count);
+function StockPriceTracker() {
+  const [currentPrice, setCurrentPrice] = useState(150.00);
+  const previousPrice = usePrevious(currentPrice);
 
   return (
     <div>
-      <h2>Count: {count}</h2>
-      <p>Previous count was: {previousCount}</p>
+      <h2>Current Price: ${currentPrice}</h2>
+      <p>Previous price was: ${previousPrice}</p>
       
-      {previousCount !== undefined && (
+      {previousPrice !== undefined && (
         <p>
-          {count > previousCount ? '📈 Increased' : '📉 Decreased'}
+          {currentPrice > previousPrice ? '📈 Price increased' : '📉 Price decreased'}
         </p>
       )}
       
-      <button onClick={() => setCount(count + 1)}>+1</button>
-      <button onClick={() => setCount(count - 1)}>-1</button>
+      <button onClick={() => setCurrentPrice(currentPrice + 1)}>Price +$1</button>
+      <button onClick={() => setCurrentPrice(currentPrice - 1)}>Price -$1</button>
     </div>
   );
 }
@@ -338,24 +354,24 @@ function useToggle(initialValue: boolean = false) {
 }
 
 // Example Usage:
-function LightSwitch() {
-  const [isOn, toggle, turnOn, turnOff] = useToggle(false);
+function TradingModeToggle() {
+  const [isLiveMode, toggle, turnOnLive, turnOffLive] = useToggle(false);
 
   return (
-    <div className={`light ${isOn ? 'on' : 'off'}`}>
-      <h2>Light Switch</h2>
-      <p>The light is {isOn ? 'ON' : 'OFF'}</p>
+    <div className={`trading-mode ${isLiveMode ? 'live' : 'demo'}`}>
+      <h2>Trading Mode</h2>
+      <p>Mode: {isLiveMode ? 'LIVE TRADING' : 'DEMO MODE'}</p>
       
       <button onClick={toggle}>
-        Toggle Light
+        Toggle Mode
       </button>
       
-      <button onClick={turnOn}>
-        Turn On
+      <button onClick={turnOnLive}>
+        Enable Live Trading
       </button>
       
-      <button onClick={turnOff}>
-        Turn Off
+      <button onClick={turnOffLive}>
+        Switch to Demo
       </button>
     </div>
   );
@@ -417,18 +433,19 @@ function useFetch<T>(url: string): FetchState<T> {
 }
 
 // Example Usage:
-function UserProfile() {
-  const { data: user, loading, error } = useFetch<User>('/api/user/1');
+function StockProfile() {
+  const { data: stock, loading, error } = useFetch<Stock>('/api/stocks/AAPL');
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) return <div>Loading stock data...</div>;
   if (error) return <div>Error: {error}</div>;
-  if (!user) return <div>No user found</div>;
+  if (!stock) return <div>Stock not found</div>;
 
   return (
     <div>
-      <h2>{user.name}</h2>
-      <p>Email: {user.email}</p>
-      <p>Age: {user.age}</p>
+      <h2>{stock.symbol}</h2>
+      <p>Company: {stock.company}</p>
+      <p>Price: ${stock.price}</p>
+      <p>Change: {stock.change}%</p>
     </div>
   );
 }
@@ -492,24 +509,24 @@ function useForm(initialValues: FormData = {}) {
 }
 
 // Example Usage:
-function ContactForm() {
+function OrderForm() {
   const { values, errors, handleChange, validate, reset } = useForm({
-    name: '',
-    email: '',
-    message: '',
+    symbol: '',
+    quantity: '',
+    price: '',
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
     const isValid = validate({
-      name: (value) => !value ? 'Name is required' : null,
-      email: (value) => !value ? 'Email is required' : !value.includes('@') ? 'Invalid email' : null,
-      message: (value) => !value ? 'Message is required' : value.length < 10 ? 'Message too short' : null,
+      symbol: (value) => !value ? 'Stock symbol is required' : null,
+      quantity: (value) => !value ? 'Quantity is required' : parseInt(value) <= 0 ? 'Quantity must be positive' : null,
+      price: (value) => !value ? 'Price is required' : parseFloat(value) <= 0 ? 'Price must be positive' : null,
     });
 
     if (isValid) {
-      console.log('Form submitted:', values);
+      console.log('Order submitted:', values);
       reset();
     }
   };
@@ -519,33 +536,35 @@ function ContactForm() {
       <div>
         <input
           type="text"
-          placeholder="Name"
-          value={values.name}
-          onChange={(e) => handleChange('name', e.target.value)}
+          placeholder="Stock Symbol (e.g., AAPL)"
+          value={values.symbol}
+          onChange={(e) => handleChange('symbol', e.target.value)}
         />
-        {errors.name && <span className="error">{errors.name}</span>}
+        {errors.symbol && <span className="error">{errors.symbol}</span>}
       </div>
 
       <div>
         <input
-          type="email"
-          placeholder="Email"
-          value={values.email}
-          onChange={(e) => handleChange('email', e.target.value)}
+          type="number"
+          placeholder="Quantity"
+          value={values.quantity}
+          onChange={(e) => handleChange('quantity', e.target.value)}
         />
-        {errors.email && <span className="error">{errors.email}</span>}
+        {errors.quantity && <span className="error">{errors.quantity}</span>}
       </div>
 
       <div>
-        <textarea
-          placeholder="Message"
-          value={values.message}
-          onChange={(e) => handleChange('message', e.target.value)}
+        <input
+          type="number"
+          step="0.01"
+          placeholder="Price per share"
+          value={values.price}
+          onChange={(e) => handleChange('price', e.target.value)}
         />
-        {errors.message && <span className="error">{errors.message}</span>}
+        {errors.price && <span className="error">{errors.price}</span>}
       </div>
 
-      <button type="submit">Send Message</button>
+      <button type="submit">Place Order</button>
     </form>
   );
 }
@@ -581,7 +600,7 @@ function useInterval(callback: () => void, delay: number | null) {
 }
 
 // Example Usage:
-function Timer() {
+function MarketTimer() {
   const [seconds, setSeconds] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
 
@@ -594,14 +613,14 @@ function Timer() {
 
   return (
     <div>
-      <h2>Timer: {seconds} seconds</h2>
+      <h2>Market Session: {Math.floor(seconds / 60)}:{(seconds % 60).toString().padStart(2, '0')}</h2>
       
       <button onClick={() => setIsRunning(!isRunning)}>
-        {isRunning ? 'Pause' : 'Start'}
+        {isRunning ? 'Pause Timer' : 'Start Timer'}
       </button>
       
       <button onClick={() => setSeconds(0)}>
-        Reset
+        Reset Timer
       </button>
     </div>
   );
@@ -645,27 +664,27 @@ function useKeyPress(targetKey: string): boolean {
 }
 
 // Example Usage:
-function KeyboardGame() {
-  const wPressed = useKeyPress('w');
-  const aPressed = useKeyPress('a');
+function TradingHotkeys() {
+  const bPressed = useKeyPress('b');
   const sPressed = useKeyPress('s');
-  const dPressed = useKeyPress('d');
+  const cPressed = useKeyPress('c');
+  const rPressed = useKeyPress('r');
 
   return (
     <div>
-      <h2>Press WASD keys</h2>
+      <h2>Trading Hotkeys</h2>
       <div className="controls">
-        <div className={`key ${wPressed ? 'pressed' : ''}`}>W</div>
-        <div className={`key ${aPressed ? 'pressed' : ''}`}>A</div>
-        <div className={`key ${sPressed ? 'pressed' : ''}`}>S</div>
-        <div className={`key ${dPressed ? 'pressed' : ''}`}>D</div>
+        <div className={`key ${bPressed ? 'pressed' : ''}`}>B (Buy)</div>
+        <div className={`key ${sPressed ? 'pressed' : ''}`}>S (Sell)</div>
+        <div className={`key ${cPressed ? 'pressed' : ''}`}>C (Chart)</div>
+        <div className={`key ${rPressed ? 'pressed' : ''}`}>R (Refresh)</div>
       </div>
       
       <p>
-        {wPressed && 'Moving up! '}
-        {aPressed && 'Moving left! '}
-        {sPressed && 'Moving down! '}
-        {dPressed && 'Moving right! '}
+        {bPressed && 'Buy order initiated! '}
+        {sPressed && 'Sell order initiated! '}
+        {cPressed && 'Chart view toggled! '}
+        {rPressed && 'Data refreshed! '}
       </p>
     </div>
   );
@@ -705,21 +724,21 @@ function useMediaQuery(query: string): boolean {
 }
 
 // Example Usage:
-function ResponsiveApp() {
+function ResponsiveTradingApp() {
   const isMobile = useMediaQuery('(max-width: 768px)');
   const isTablet = useMediaQuery('(min-width: 769px) and (max-width: 1024px)');
   const isDesktop = useMediaQuery('(min-width: 1025px)');
   const prefersDark = useMediaQuery('(prefers-color-scheme: dark)');
 
   return (
-    <div className={`app ${prefersDark ? 'dark' : 'light'}`}>
-      <h2>Responsive App</h2>
+    <div className={`trading-app ${prefersDark ? 'dark' : 'light'}`}>
+      <h2>Trading Platform</h2>
       
-      {isMobile && <p>📱 Mobile Layout</p>}
-      {isTablet && <p>💻 Tablet Layout</p>}
-      {isDesktop && <p>🖥️ Desktop Layout</p>}
+      {isMobile && <p>📱 Mobile Trading - Simplified charts, essential functions</p>}
+      {isTablet && <p>💻 Tablet Trading - Medium charts, full trading capabilities</p>}
+      {isDesktop && <p>🖥️ Desktop Trading - Full charts, multiple watchlists, advanced tools</p>}
       
-      <p>Theme: {prefersDark ? 'Dark' : 'Light'} Mode</p>
+      <p>Theme: {prefersDark ? 'Dark' : 'Light'} Mode (Perfect for {prefersDark ? 'night' : 'day'} trading)</p>
     </div>
   );
 }
