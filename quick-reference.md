@@ -26,6 +26,18 @@
 ### 8. "What's your approach to testing frontend applications?"
 **Answer**: "I use a testing pyramid: unit tests for components and utilities, integration tests for user flows, and E2E tests for critical paths. I use Jest for unit testing, React Testing Library for component testing, and Cypress for E2E. I also implement visual regression testing and performance testing. For a trading app, I'd focus on testing real-time data handling, form validations, and error scenarios."
 
+### 9. "What is React.memo and when do you use it?"
+**Answer**: "React.memo is a higher-order component that memoizes your component. It prevents the component from re-rendering if its props haven't changed. Think of it like a smart component that says 'I only re-render when my props actually change.' For example, if you have a StockItem component that displays stock data, React.memo will prevent it from re-rendering when the parent component updates but the stock data hasn't changed. I use React.memo for expensive components that receive the same props frequently, like chart components or list items in a trading dashboard."
+
+### 10. "What is useMemo and when do you use it?"
+**Answer**: "useMemo is a hook that memoizes the result of expensive calculations. It only recalculates when its dependencies change. Think of it like caching a math problem answer. For example, if you're filtering and sorting a list of 10,000 stocks, useMemo will only recalculate when the stock data actually changes, not on every render. I use useMemo for expensive operations like data filtering, sorting, complex calculations, or when creating large objects that don't need to be recreated on every render."
+
+### 11. "What is useCallback and when do you use it?"
+**Answer**: "useCallback is a hook that memoizes functions. It returns the same function reference unless its dependencies change. Think of it like keeping the same recipe unless the ingredients change. For example, if you have a handleStockClick function that gets passed to child components, useCallback ensures the child components don't re-render unnecessarily because the function reference stays the same. I use useCallback when passing functions as props to optimized child components (wrapped in React.memo) to prevent unnecessary re-renders."
+
+### 12. "What is React.lazy and when do you use it?"
+**Answer**: "React.lazy is a function that lets you load components only when they're needed. Think of it like loading chapters of a book only when you want to read them. For example, if you have a heavy chart component that's only shown when a user clicks a button, React.lazy will only download that component's code when the user actually clicks the button. I use React.lazy for route-based code splitting, heavy components that aren't immediately visible, or features that are conditionally rendered based on user permissions or actions."
+
 ## System Design Questions
 
 ### 1. "Design a real-time trading dashboard"
