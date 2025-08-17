@@ -33,13 +33,16 @@
 ### 1. "How do you take ownership of frontend systems?"
 **Answer**: "I start by understanding business requirements and user needs. I create technical roadmaps, establish coding standards, implement monitoring and alerting, and mentor junior developers. I regularly communicate with stakeholders, track KPIs, and proactively identify and address technical debt. For example, at my last role, I took ownership of a slow dashboard and improved performance by 70% through optimization."
 
-### 2. "Describe a complex technical challenge you solved"
+### 2. "What is memoization?"
+**Answer**: "Memoization is like remembering the answer to a math problem so you don't have to calculate it again. It's a technique where you store the result of expensive calculations and return the cached result when the same inputs occur again. For example, if you calculate the factorial of 5 (which is 120), you save that result. Next time someone asks for factorial of 5, instead of calculating 5×4×3×2×1 again, you just return 120 from memory. In React, we use useMemo and useCallback for memoization. useMemo caches expensive calculations, and useCallback caches functions to prevent unnecessary re-renders of child components."
+
+### 3. "Describe a complex technical challenge you solved"
 **Answer**: "I optimized a trading dashboard that was slow with real-time data. The challenge was handling 10,000+ stock symbols with live updates. I implemented virtual scrolling, memoization, WebSocket connection pooling, and data normalization. I also added performance monitoring and error boundaries. The result was 70% faster load times and better user experience."
 
-### 3. "How do you work with design and product teams?"
+### 4. "How do you work with design and product teams?"
 **Answer**: "I involve myself early in the design process, asking questions about user flows and technical constraints. I provide feedback on feasibility and suggest improvements based on technical capabilities. I use tools like Figma for collaboration and create prototypes to validate ideas. I also ensure the final implementation matches the design while maintaining performance and accessibility."
 
-### 4. "How do you handle conflicting requirements?"
+### 5. "How do you handle conflicting requirements?"
 **Answer**: "I gather all stakeholders to understand the root cause of conflicts. I present data-driven solutions and explain trade-offs. I prioritize based on business impact and user needs. For example, if there's a conflict between adding features and performance, I'd propose a phased approach or find ways to optimize existing code to accommodate both."
 
 ## Problem-Solving Questions
