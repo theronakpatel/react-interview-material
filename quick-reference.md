@@ -2,19 +2,22 @@
 
 ## Technical Questions
 
-### 1. "Explain the Virtual DOM in React"
+### 1. "What is the DOM?"
+**Answer**: "The DOM (Document Object Model) is like a tree structure that represents your HTML page. Think of it as a family tree where each HTML element is a family member. For example, if you have a webpage with a header, navigation, and main content, the DOM creates a tree where the `<html>` is the grandparent, `<body>` is the parent, and `<header>`, `<nav>`, and `<main>` are the children. When you want to change something on the page (like updating text or adding a new element), you're actually modifying this DOM tree. The browser then re-renders the page to show your changes."
+
+### 2. "Explain the Virtual DOM in React"
 **Answer**: "The Virtual DOM is a lightweight copy of the actual DOM. When state changes, React creates a new Virtual DOM tree, compares it with the previous one (diffing), and updates only the necessary parts of the real DOM. This makes React efficient by minimizing expensive DOM operations. For example, if I have a list of 1000 items and only one changes, React will only update that specific item instead of re-rendering the entire list."
 
-### 2. "How do you optimize React performance?"
+### 3. "How do you optimize React performance?"
 **Answer**: "I use several strategies: React.memo for component memoization, useMemo for expensive calculations, useCallback for function memoization, and React.lazy for code splitting. I also implement virtual scrolling for large lists, optimize bundle size with tree shaking, and use React DevTools Profiler to identify bottlenecks. For example, in a trading dashboard, I'd memoize chart components and use virtual scrolling for stock lists."
 
-### 3. "Explain state management in Vue 3"
+### 4. "Explain state management in Vue 3"
 **Answer**: "Vue 3 offers multiple approaches. The Composition API with reactive() and ref() for local state, Pinia for global state management with better TypeScript support than Vuex, and provide/inject for dependency injection. For a trading app, I'd use Pinia to manage user portfolio, watchlist, and real-time stock data, with reactive() for component-specific state like form inputs."
 
-### 4. "How do you handle real-time data in a frontend application?"
+### 5. "How do you handle real-time data in a frontend application?"
 **Answer**: "I use WebSocket connections for real-time updates, implement connection pooling and reconnection logic, use debouncing for rapid updates, and implement optimistic UI updates. For error handling, I use error boundaries and fallback states. In a trading context, I'd also implement data validation, handle connection failures gracefully, and use service workers for offline functionality."
 
-### 5. "What's your approach to testing frontend applications?"
+### 6. "What's your approach to testing frontend applications?"
 **Answer**: "I use a testing pyramid: unit tests for components and utilities, integration tests for user flows, and E2E tests for critical paths. I use Jest for unit testing, React Testing Library for component testing, and Cypress for E2E. I also implement visual regression testing and performance testing. For a trading app, I'd focus on testing real-time data handling, form validations, and error scenarios."
 
 ## System Design Questions
