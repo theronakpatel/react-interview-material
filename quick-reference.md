@@ -38,6 +38,18 @@
 ### 12. "What is React.lazy and when do you use it?"
 **Answer**: "React.lazy is a function that lets you load components only when they're needed. Think of it like loading chapters of a book only when you want to read them. For example, if you have a heavy stock chart component that's only shown when a user clicks a button, React.lazy will only download that component's code when the user actually clicks the button. I use React.lazy for route-based code splitting, heavy components that aren't immediately visible, or features that are conditionally rendered based on user permissions or actions, like advanced trading tools, detailed stock analysis pages, or admin panels."
 
+### 13. "What are Web Workers and when do you use them?"
+**Answer**: "Web Workers are like having a separate worker thread that runs JavaScript code in the background without blocking the main thread. Think of it like having a helper who does heavy work while you keep the UI responsive. For example, if you're calculating portfolio risk for 10,000 stocks, a Web Worker can do this calculation in the background while the user can still interact with the trading interface. I use Web Workers for CPU-intensive tasks like complex financial calculations, data processing, or any operation that would freeze the UI."
+
+### 14. "What's the difference between Web Workers and Service Workers?"
+**Answer**: "Web Workers are for CPU-intensive background tasks that don't block the UI, like portfolio calculations or stock data processing. Service Workers act as network proxies, handling caching, offline functionality, and push notifications. For a trading app, I'd use Web Workers for heavy financial calculations and Service Workers for caching stock data, enabling offline portfolio viewing, and sending push notifications about price alerts."
+
+### 15. "What are Promises and how do they work?"
+**Answer**: "Promises represent the eventual completion of an asynchronous operation. They have three states: pending, fulfilled, and rejected. Think of it like ordering food - you get a promise (receipt) that will eventually be fulfilled (food delivered) or rejected (order cancelled). For example, when fetching stock data, I use promises to handle the API response. I prefer async/await over raw promises for cleaner code, especially for trading operations like order placement and balance updates."
+
+### 16. "What is RxJS and when would you use it?"
+**Answer**: "RxJS is a reactive programming library that uses Observables to handle asynchronous data streams. Think of it like a smart pipe system that can transform, filter, and combine data streams. For a trading app, I use RxJS for real-time stock price updates, user input handling with debouncing, and managing complex state flows. It's particularly useful when you need to handle multiple data streams simultaneously, like price feeds, order updates, and user interactions."
+
 ## System Design Questions
 
 ### 1. "Design a real-time trading dashboard"

@@ -200,9 +200,9 @@ function StockChart({ stockData, onStockSelect }) {
 
 ---
 
-## 4. Virtual Scrolling - Handle Large Lists
+## 4. Virtual Scrolling with React-Window - Handle Large Lists
 
-**What it does**: Only renders items that are visible on screen.
+**What it does**: Only renders items that are visible on screen using react-window library.
 
 ### ❌ **Without Virtual Scrolling (Bad Performance)**
 ```tsx
@@ -223,7 +223,7 @@ function StockList({ stocks }) {
 }
 ```
 
-### ✅ **With Virtual Scrolling (Good Performance)**
+### ✅ **With React-Window Virtual Scrolling (Good Performance)**
 ```tsx
 import { FixedSizeList as List } from 'react-window';
 
@@ -312,7 +312,75 @@ function App() {
 
 ---
 
-## 6. Bundle Optimization
+## 6. Web Workers - Background Processing
+
+**What it does**: Moves heavy calculations to a background thread to prevent UI blocking.
+
+### ❌ **Without Web Workers (Bad Performance)**
+```tsx
+function PortfolioAnalysis({ stocks }) {
+  const [riskScore, setRiskScore] = useState(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  const calculateRisk = () => {
+    setIsCalculating(true);
+    // This blocks the UI for several seconds
+    const score = complexRiskCalculation(stocks);
+    setRiskScore(score);
+    setIsCalculating(false);
+  };
+
+  return (
+    <div>
+      <button onClick={calculateRisk}>Calculate Risk</button>
+      {isCalculating && <p>Calculating... (UI is frozen!)</p>}
+      {riskScore && <p>Risk Score: {riskScore}</p>}
+    </div>
+  );
+}
+```
+
+### ✅ **With Web Workers (Good Performance)**
+```tsx
+function PortfolioAnalysis({ stocks }) {
+  const [riskScore, setRiskScore] = useState(null);
+  const [isCalculating, setIsCalculating] = useState(false);
+
+  useEffect(() => {
+    const worker = new Worker('/risk-calculator.js');
+    
+    worker.onmessage = (event) => {
+      setRiskScore(event.data.riskScore);
+      setIsCalculating(false);
+    };
+
+    return () => worker.terminate();
+  }, []);
+
+  const calculateRisk = () => {
+    setIsCalculating(true);
+    // This runs in background, UI stays responsive
+    worker.postMessage({ stocks });
+  };
+
+  return (
+    <div>
+      <button onClick={calculateRisk}>Calculate Risk</button>
+      {isCalculating && <p>Calculating... (UI is responsive!)</p>}
+      {riskScore && <p>Risk Score: {riskScore}</p>}
+    </div>
+  );
+}
+
+// risk-calculator.js
+self.onmessage = function(event) {
+  const { stocks } = event.data;
+  const riskScore = complexRiskCalculation(stocks);
+  self.postMessage({ riskScore });
+};
+```
+
+## 7. Bundle Optimization
 
 ### **Tree Shaking**
 ```tsx
@@ -335,7 +403,7 @@ const LineChart = lazy(() => import('chart-library/LineChart'));
 
 ---
 
-## 7. Performance Monitoring
+## 8. Performance Monitoring
 
 ### **React DevTools Profiler**
 ```tsx
@@ -370,7 +438,7 @@ function usePerformanceMonitor(componentName) {
 
 ---
 
-## 8. Real-World Trading App Example
+## 9. Real-World Trading App Example
 
 ```tsx
 import React, { memo, useMemo, useCallback, lazy, Suspense } from 'react';
@@ -469,7 +537,8 @@ function TradingDashboard({ stocks, selectedStock }) {
 - [ ] Use React.memo for expensive components
 - [ ] Use useMemo for expensive calculations
 - [ ] Use useCallback for function props
-- [ ] Implement virtual scrolling for large lists
+- [ ] Implement virtual scrolling with react-window for large lists
+- [ ] Use Web Workers for heavy calculations
 - [ ] Use lazy loading for heavy components
 - [ ] Optimize bundle size with tree shaking
 
@@ -487,7 +556,8 @@ function TradingDashboard({ stocks, selectedStock }) {
 - 🚀 **React.memo** - Stop unnecessary re-renders
 - 🧮 **useMemo** - Cache expensive calculations
 - 🔄 **useCallback** - Prevent function recreation
-- 📜 **Virtual Scrolling** - Handle large datasets
+- 📜 **React-window** - Handle large datasets efficiently
+- 🧵 **Web Workers** - Background processing for heavy calculations
 - ⏳ **Lazy Loading** - Load components when needed
 - 📦 **Bundle Optimization** - Reduce initial load time
 
