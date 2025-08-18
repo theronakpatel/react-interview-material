@@ -1,877 +1,699 @@
-# JavaScript Fundamentals - Advanced Concepts
+# JavaScript Fundamentals - Complete Guide
 
-## What is a Web Worker?
+## Table of Contents
+1. [Closures](#closures)
+2. [Scope and Hoisting](#scope-and-hoisting)
+3. [This Keyword](#this-keyword)
+4. [Prototypes and Inheritance](#prototypes-and-inheritance)
+5. [Promises and Async/Await](#promises-and-asyncawait)
+6. [ES6+ Features](#es6-features)
+7. [Common Patterns](#common-patterns)
 
-**Web Workers** are like having a separate worker thread that runs JavaScript code in the background without blocking the main thread (UI thread).
+---
 
-### **Why Use Web Workers?**
-- **Prevent UI freezing** - Heavy calculations don't block the interface
-- **Better performance** - Parallel processing
-- **Responsive UI** - Main thread stays responsive
+## Closures
 
-### **Example: Stock Data Processing**
+### What are Closures?
+
+A **closure** is a function that has access to variables in its outer (enclosing) lexical scope even after the outer function has returned. In other words, a closure allows a function to "remember" and access variables from its outer scope even when the function is executed in a different scope.
+
+### Basic Closure Example
+
 ```javascript
-// Main thread (UI)
-const worker = new Worker('stock-worker.js');
-
-// Send data to worker
-worker.postMessage({
-  stocks: largeStockDataset,
-  operation: 'calculatePortfolioRisk'
-});
-
-// Receive result from worker
-worker.onmessage = function(event) {
-  const riskScore = event.data.riskScore;
-  updateRiskDisplay(riskScore);
-};
-
-// stock-worker.js
-self.onmessage = function(event) {
-  const { stocks, operation } = event.data;
+function outerFunction(x) {
+  // This is the outer scope
+  const outerVariable = "I'm from outer function";
   
-  if (operation === 'calculatePortfolioRisk') {
-    // Heavy calculation that would freeze UI
-    const riskScore = calculateComplexRiskModel(stocks);
-    
-    // Send result back to main thread
-    self.postMessage({ riskScore });
+  function innerFunction(y) {
+    // This is the inner scope - it's a closure
+    console.log(outerVariable); // Can access outerVariable
+    console.log(x); // Can access parameter x
+    console.log(y); // Can access its own parameter y
   }
-};
-
-function calculateComplexRiskModel(stocks) {
-  // Complex risk calculation that takes time
-  return stocks.reduce((risk, stock) => {
-    return risk + (stock.volatility * stock.weight);
-  }, 0);
-}
-```
-
----
-
-## Web Worker vs Service Worker
-
-| Feature | Web Worker | Service Worker |
-|---------|------------|----------------|
-| **Purpose** | Background processing | Network proxy, caching, offline support |
-| **Lifecycle** | Lives with the page | Lives independently of pages |
-| **Access** | No DOM access | No DOM access |
-| **Network** | Can make network requests | Intercepts network requests |
-| **Storage** | No storage access | Can access Cache API, IndexedDB |
-| **Use Case** | Heavy calculations | Offline functionality, push notifications |
-
-### **Web Worker Example (Trading Calculations)**
-```javascript
-// Main thread
-const calculationWorker = new Worker('trading-calculator.js');
-
-function calculatePortfolioMetrics(portfolio) {
-  calculationWorker.postMessage({
-    type: 'PORTFOLIO_ANALYSIS',
-    data: portfolio
-  });
+  
+  return innerFunction;
 }
 
-calculationWorker.onmessage = function(event) {
-  const { metrics } = event.data;
-  updatePortfolioDisplay(metrics);
-};
-
-// trading-calculator.js
-self.onmessage = function(event) {
-  if (event.data.type === 'PORTFOLIO_ANALYSIS') {
-    const portfolio = event.data.data;
-    const metrics = {
-      totalValue: calculateTotalValue(portfolio),
-      riskScore: calculateRiskScore(portfolio),
-      diversification: calculateDiversification(portfolio)
-    };
-    self.postMessage({ metrics });
-  }
-};
+const closure = outerFunction("Hello");
+closure("World");
+// Output:
+// "I'm from outer function"
+// "Hello"
+// "World"
 ```
 
-### **Service Worker Example (Trading App Caching)**
+### How Closures Work
+
+1. **Lexical Scoping**: JavaScript uses lexical scoping, meaning inner functions have access to variables in their outer scope
+2. **Function Creation**: When a function is created, it captures (remembers) the variables in its outer scope
+3. **Execution**: When the function is executed later, it still has access to those captured variables
+
+### Practical Examples
+
+#### 1. Counter with Closure
+
 ```javascript
-// service-worker.js
-self.addEventListener('install', function(event) {
-  event.waitUntil(
-    caches.open('trading-cache-v1').then(function(cache) {
-      return cache.addAll([
-        '/',
-        '/static/js/app.js',
-        '/static/css/styles.css',
-        '/api/stocks/popular'
-      ]);
-    })
-  );
-});
-
-self.addEventListener('fetch', function(event) {
-  if (event.request.url.includes('/api/stocks/')) {
-    event.respondWith(
-      caches.match(event.request).then(function(response) {
-        return response || fetch(event.request);
-      })
-    );
-  }
-});
-```
-
----
-
-## React-Window (Virtual Scrolling)
-
-**React-window** is a library for efficiently rendering large lists and tabular data by only rendering items that are visible.
-
-### **Why Use React-Window?**
-- **Performance** - Only renders visible items
-- **Memory efficiency** - Doesn't create DOM for all items
-- **Smooth scrolling** - Handles large datasets
-
-### **Example: Stock List with Virtual Scrolling**
-```jsx
-import { FixedSizeList as List } from 'react-window';
-
-function StockList({ stocks }) {
-  const Row = ({ index, style }) => {
-    const stock = stocks[index];
-    return (
-      <div style={style} className="stock-row">
-        <span className="symbol">{stock.symbol}</span>
-        <span className="price">${stock.price}</span>
-        <span className={`change ${stock.change >= 0 ? 'positive' : 'negative'}`}>
-          {stock.change}%
-        </span>
-      </div>
-    );
+function createCounter() {
+  let count = 0; // Private variable
+  
+  return {
+    increment: function() {
+      count++;
+      return count;
+    },
+    decrement: function() {
+      count--;
+      return count;
+    },
+    getCount: function() {
+      return count;
+    }
   };
-
-  return (
-    <List
-      height={400}
-      itemCount={stocks.length}
-      itemSize={50}
-      width="100%"
-    >
-      {Row}
-    </List>
-  );
 }
 
-// Usage
-const stocks = Array.from({ length: 10000 }, (_, i) => ({
-  symbol: `STOCK${i}`,
-  price: Math.random() * 1000,
-  change: (Math.random() - 0.5) * 10
-}));
+const counter = createCounter();
+console.log(counter.getCount()); // 0
+console.log(counter.increment()); // 1
+console.log(counter.increment()); // 2
+console.log(counter.decrement()); // 1
+console.log(counter.getCount()); // 1
 
-<StockList stocks={stocks} />
+// Each counter has its own private count variable
+const counter2 = createCounter();
+console.log(counter2.getCount()); // 0 (separate from counter1)
 ```
 
----
+#### 2. Data Privacy
 
-## Observable Pattern
-
-**Observable** is a design pattern that allows you to subscribe to data streams and react to changes.
-
-### **Simple Observable Implementation**
 ```javascript
-class Observable {
-  constructor() {
-    this.observers = [];
-  }
-
-  subscribe(observer) {
-    this.observers.push(observer);
-    return () => {
-      this.observers = this.observers.filter(obs => obs !== observer);
-    };
-  }
-
-  notify(data) {
-    this.observers.forEach(observer => observer(data));
-  }
-}
-
-// Trading Example
-const stockPriceObservable = new Observable();
-
-// Subscribe to price changes
-const unsubscribe = stockPriceObservable.subscribe(price => {
-  console.log('Stock price changed:', price);
-  updatePriceDisplay(price);
-});
-
-// Notify subscribers
-stockPriceObservable.notify(150.25);
-```
-
----
-
-## Observer Pattern
-
-**Observer** is a behavioral design pattern where objects subscribe to events and get notified when those events occur.
-
-### **Example: Stock Market Observer**
-```javascript
-class StockMarket {
-  constructor() {
-    this.observers = [];
-    this.stocks = {};
-  }
-
-  addObserver(observer) {
-    this.observers.push(observer);
-  }
-
-  removeObserver(observer) {
-    this.observers = this.observers.filter(obs => obs !== observer);
-  }
-
-  notifyObservers(stockSymbol, price) {
-    this.observers.forEach(observer => {
-      observer.update(stockSymbol, price);
-    });
-  }
-
-  updateStockPrice(symbol, price) {
-    this.stocks[symbol] = price;
-    this.notifyObservers(symbol, price);
-  }
-}
-
-class PriceAlert {
-  constructor(symbol, targetPrice) {
-    this.symbol = symbol;
-    this.targetPrice = targetPrice;
-  }
-
-  update(symbol, price) {
-    if (symbol === this.symbol && price >= this.targetPrice) {
-      console.log(`Alert: ${symbol} reached ${price}!`);
+function createBankAccount(initialBalance) {
+  let balance = initialBalance; // Private variable
+  
+  return {
+    deposit: function(amount) {
+      if (amount > 0) {
+        balance += amount;
+        return `Deposited $${amount}. New balance: $${balance}`;
+      }
+      return "Invalid deposit amount";
+    },
+    withdraw: function(amount) {
+      if (amount > 0 && amount <= balance) {
+        balance -= amount;
+        return `Withdrew $${amount}. New balance: $${balance}`;
+      }
+      return "Insufficient funds or invalid amount";
+    },
+    getBalance: function() {
+      return balance;
     }
-  }
+  };
 }
 
-// Usage
-const market = new StockMarket();
-const alert = new PriceAlert('AAPL', 150);
-market.addObserver(alert);
-
-market.updateStockPrice('AAPL', 155); // Triggers alert
+const account = createBankAccount(1000);
+console.log(account.getBalance()); // 1000
+console.log(account.deposit(500)); // "Deposited $500. New balance: $1500"
+console.log(account.withdraw(200)); // "Withdrew $200. New balance: $1300"
+// console.log(balance); // Error: balance is not accessible from outside
 ```
 
----
+#### 3. Function Factory
 
-## Promises - Deep Dive
-
-**Promises** represent the eventual completion (or failure) of an asynchronous operation. Think of them as a contract that says "I promise to give you a result later."
-
-### **Promise States:**
-- **Pending**: Initial state (waiting for result)
-- **Fulfilled**: Operation completed successfully (got the result)
-- **Rejected**: Operation failed (got an error)
-
-### **How Promises Work:**
 ```javascript
-// Promise constructor takes a function with resolve and reject
-const myPromise = new Promise((resolve, reject) => {
-  // Do some async work
-  const success = Math.random() > 0.5;
+function multiply(x) {
+  return function(y) {
+    return x * y;
+  };
+}
+
+const multiplyByTwo = multiply(2);
+const multiplyByTen = multiply(10);
+
+console.log(multiplyByTwo(5)); // 10
+console.log(multiplyByTen(5)); // 50
+```
+
+#### 4. Event Handlers
+
+```javascript
+function createButtonHandler(buttonId) {
+  let clickCount = 0;
   
-  if (success) {
-    resolve('Operation succeeded!'); // Promise is fulfilled
-  } else {
-    reject('Operation failed!'); // Promise is rejected
-  }
-});
-
-// Using the promise
-myPromise
-  .then(result => console.log('Success:', result))
-  .catch(error => console.log('Error:', error));
-```
-
-### **Example: Stock API with Promises**
-```javascript
-function fetchStockPrice(symbol) {
-  return new Promise((resolve, reject) => {
-    // Simulate API call
-    setTimeout(() => {
-      const stockData = {
-        AAPL: { price: 150.25, change: 2.5 },
-        GOOGL: { price: 2800.50, change: -1.2 },
-        MSFT: { price: 320.75, change: 0.8 }
-      };
-      
-      if (stockData[symbol]) {
-        resolve(stockData[symbol]);
-      } else {
-        reject(new Error(`Stock ${symbol} not found`));
-      }
-    }, 1000); // Simulate network delay
-  });
+  return function() {
+    clickCount++;
+    console.log(`Button ${buttonId} clicked ${clickCount} times`);
+  };
 }
 
-// Usage
-fetchStockPrice('AAPL')
-  .then(stockData => {
-    console.log('Apple stock price:', stockData.price);
-    console.log('Price change:', stockData.change + '%');
-    updatePriceDisplay(stockData);
-  })
-  .catch(error => {
-    console.error('Error fetching price:', error);
-    showErrorMessage(error.message);
-  });
+const button1Handler = createButtonHandler("btn1");
+const button2Handler = createButtonHandler("btn2");
+
+button1Handler(); // "Button btn1 clicked 1 times"
+button1Handler(); // "Button btn1 clicked 2 times"
+button2Handler(); // "Button btn2 clicked 1 times"
 ```
 
-### **Promise.all() - Multiple Stock Prices**
+### Closures in React Hooks
+
+Closures are fundamental to how React hooks work. Let's look at some examples:
+
+#### useState Hook (Simplified)
+
 ```javascript
-function fetchMultipleStockPrices(symbols) {
-  const promises = symbols.map(symbol => fetchStockPrice(symbol));
+function useState(initialValue) {
+  let state = initialValue;
   
-  return Promise.all(promises)
-    .then(stockDataArray => {
-      const stockData = symbols.map((symbol, index) => ({
-        symbol,
-        ...stockDataArray[index]
-      }));
-      return stockData;
-    });
-}
-
-// Usage
-fetchMultipleStockPrices(['AAPL', 'GOOGL', 'MSFT'])
-  .then(stocks => {
-    stocks.forEach(stock => {
-      console.log(`${stock.symbol}: $${stock.price} (${stock.change}%)`);
-    });
-  })
-  .catch(error => {
-    console.error('Error fetching multiple stocks:', error);
-  });
-```
-
-### **Promise.race() - First to Complete**
-```javascript
-function fetchStockWithTimeout(symbol, timeout = 5000) {
-  const stockPromise = fetchStockPrice(symbol);
-  const timeoutPromise = new Promise((_, reject) => {
-    setTimeout(() => reject(new Error('Request timeout')), timeout);
-  });
+  const setState = function(newValue) {
+    state = newValue;
+    // Trigger re-render logic here
+  };
   
-  return Promise.race([stockPromise, timeoutPromise]);
+  return [state, setState];
 }
 
 // Usage
-fetchStockWithTimeout('AAPL', 3000)
-  .then(stockData => {
-    console.log('Stock data received:', stockData);
-  })
-  .catch(error => {
-    console.error('Request failed:', error.message);
-  });
+const [count, setCount] = useState(0);
 ```
 
-### **Promise.allSettled() - Wait for All (Success or Failure)**
+#### useEffect Hook (Simplified)
+
 ```javascript
-function fetchAllStockData(symbols) {
-  const promises = symbols.map(symbol => 
-    fetchStockPrice(symbol)
-      .then(data => ({ status: 'fulfilled', value: data }))
-      .catch(error => ({ status: 'rejected', reason: error }))
-  );
-  
-  return Promise.allSettled(promises);
-}
-
-// Usage
-fetchAllStockData(['AAPL', 'INVALID', 'GOOGL'])
-  .then(results => {
-    results.forEach((result, index) => {
-      if (result.status === 'fulfilled') {
-        console.log(`${symbols[index]}: Success`, result.value);
-      } else {
-        console.log(`${symbols[index]}: Failed`, result.reason);
-      }
-    });
-  });
-```
-
-### **Promise.any() - First Success**
-```javascript
-function fetchStockFromMultipleSources(symbol) {
-  const sources = [
-    fetchStockPrice(symbol),
-    fetchStockPriceFromBackup(symbol),
-    fetchStockPriceFromCache(symbol)
-  ];
-  
-  return Promise.any(sources);
-}
-
-// Usage
-fetchStockFromMultipleSources('AAPL')
-  .then(stockData => {
-    console.log('Stock data from fastest source:', stockData);
-  })
-  .catch(error => {
-    console.error('All sources failed:', error);
-  });
-```
-
-### **Promise Chaining - Complex Operations**
-```javascript
-function processStockOrder(symbol, quantity) {
-  return fetchStockPrice(symbol)
-    .then(stockData => {
-      console.log('Stock price fetched:', stockData.price);
-      return { ...stockData, quantity };
-    })
-    .then(orderData => {
-      const totalCost = orderData.price * orderData.quantity;
-      console.log('Total cost:', totalCost);
-      return { ...orderData, totalCost };
-    })
-    .then(orderData => {
-      return checkUserBalance(orderData.totalCost)
-        .then(hasBalance => ({ ...orderData, hasBalance }));
-    })
-    .then(orderData => {
-      if (orderData.hasBalance) {
-        return placeOrder(orderData);
-      } else {
-        throw new Error('Insufficient balance');
-      }
-    })
-    .then(orderResult => {
-      console.log('Order placed successfully:', orderResult);
-      return orderResult;
-    })
-    .catch(error => {
-      console.error('Order failed:', error.message);
-      throw error; // Re-throw to be handled by caller
-    });
-}
-
-// Usage
-processStockOrder('AAPL', 10)
-  .then(result => {
-    console.log('Order completed:', result);
-  })
-  .catch(error => {
-    console.error('Order processing failed:', error);
-  });
-```
-
-### **Error Handling Patterns**
-```javascript
-// 1. Individual error handling
-fetchStockPrice('AAPL')
-  .then(stockData => {
-    // Handle success
-    return stockData;
-  })
-  .catch(error => {
-    // Handle specific error
-    console.error('Stock fetch failed:', error);
-    return { price: 0, change: 0 }; // Fallback data
-  });
-
-// 2. Global error handling
-function fetchStockWithGlobalErrorHandling(symbol) {
-  return fetchStockPrice(symbol)
-    .then(stockData => {
-      if (!stockData.price) {
-        throw new Error('Invalid stock data');
-      }
-      return stockData;
-    });
-}
-
-// 3. Error recovery
-function fetchStockWithRetry(symbol, maxRetries = 3) {
-  return new Promise((resolve, reject) => {
-    let attempts = 0;
-    
-    function attempt() {
-      fetchStockPrice(symbol)
-        .then(resolve)
-        .catch(error => {
-          attempts++;
-          if (attempts < maxRetries) {
-            console.log(`Retry ${attempts} for ${symbol}`);
-            setTimeout(attempt, 1000 * attempts); // Exponential backoff
-          } else {
-            reject(error);
-          }
-        });
+function useEffect(callback, dependencies) {
+  // Store the callback in closure
+  const effect = function() {
+    // Cleanup previous effect
+    if (effect.cleanup) {
+      effect.cleanup();
     }
     
-    attempt();
-  });
+    // Run the effect
+    const cleanup = callback();
+    effect.cleanup = cleanup;
+  };
+  
+  // Run effect when dependencies change
+  effect();
 }
 ```
 
-### **Converting Callbacks to Promises**
+### Common Closure Patterns
+
+#### 1. Module Pattern
+
 ```javascript
-// Old callback-based function
-function fetchStockPriceCallback(symbol, callback) {
-  setTimeout(() => {
-    const stockData = {
-      AAPL: { price: 150.25, change: 2.5 },
-      GOOGL: { price: 2800.50, change: -1.2 }
-    };
-    
-    if (stockData[symbol]) {
-      callback(null, stockData[symbol]);
-    } else {
-      callback(new Error(`Stock ${symbol} not found`), null);
+const calculator = (function() {
+  // Private variables and functions
+  let result = 0;
+  
+  function add(a, b) {
+    return a + b;
+  }
+  
+  function subtract(a, b) {
+    return a - b;
+  }
+  
+  // Public API
+  return {
+    add: function(a, b) {
+      result = add(a, b);
+      return result;
+    },
+    subtract: function(a, b) {
+      result = subtract(a, b);
+      return result;
+    },
+    getResult: function() {
+      return result;
     }
+  };
+})();
+
+console.log(calculator.add(5, 3)); // 8
+console.log(calculator.subtract(10, 4)); // 6
+console.log(calculator.getResult()); // 6
+```
+
+#### 2. Partial Application
+
+```javascript
+function partial(fn, ...args) {
+  return function(...moreArgs) {
+    return fn(...args, ...moreArgs);
+  };
+}
+
+function add(a, b, c) {
+  return a + b + c;
+}
+
+const addFive = partial(add, 5);
+const addFiveAndThree = partial(add, 5, 3);
+
+console.log(addFive(3, 2)); // 10 (5 + 3 + 2)
+console.log(addFiveAndThree(2)); // 10 (5 + 3 + 2)
+```
+
+### Common Pitfalls
+
+#### 1. Loop Variable Capture
+
+```javascript
+// ❌ Problem: All functions capture the same i variable
+for (var i = 0; i < 3; i++) {
+  setTimeout(function() {
+    console.log(i); // All print 3
   }, 1000);
 }
 
-// Convert to Promise
-function fetchStockPricePromise(symbol) {
-  return new Promise((resolve, reject) => {
-    fetchStockPriceCallback(symbol, (error, data) => {
-      if (error) {
-        reject(error);
-      } else {
-        resolve(data);
-      }
-    });
-  });
+// ✅ Solution 1: Use let (block scope)
+for (let i = 0; i < 3; i++) {
+  setTimeout(function() {
+    console.log(i); // Prints 0, 1, 2
+  }, 1000);
 }
 
-// Usage
-fetchStockPricePromise('AAPL')
-  .then(data => console.log('Success:', data))
-  .catch(error => console.error('Error:', error));
+// ✅ Solution 2: Use IIFE (Immediately Invoked Function Expression)
+for (var i = 0; i < 3; i++) {
+  (function(index) {
+    setTimeout(function() {
+      console.log(index); // Prints 0, 1, 2
+    }, 1000);
+  })(i);
+}
 ```
 
-### **Promise Utilities**
+#### 2. Memory Leaks
+
 ```javascript
-// Delay utility
-function delay(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+// ❌ Potential memory leak
+function createHeavyObject() {
+  const heavyData = new Array(1000000).fill('data');
+  
+  return function() {
+    console.log(heavyData.length); // heavyData stays in memory
+  };
 }
 
-// Usage
-delay(2000).then(() => {
-  console.log('2 seconds have passed');
-});
+// ✅ Better: Clear references when done
+function createHeavyObject() {
+  const heavyData = new Array(1000000).fill('data');
+  
+  return function() {
+    console.log(heavyData.length);
+    // Clear reference when done
+    heavyData.length = 0;
+  };
+}
+```
 
-// Timeout utility
-function timeout(promise, ms) {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Timeout')), ms)
-    )
-  ]);
+### Benefits of Closures
+
+1. **Data Privacy**: Variables can be kept private
+2. **State Preservation**: Functions can maintain state between calls
+3. **Function Factory**: Create functions with preset parameters
+4. **Module Pattern**: Create private and public APIs
+5. **Event Handling**: Maintain context in event handlers
+
+### Performance Considerations
+
+- Closures keep references to outer variables in memory
+- Be mindful of memory usage with large objects
+- Consider clearing references when no longer needed
+- Use `let` instead of `var` in loops to avoid unintended closures
+
+---
+
+## Scope and Hoisting
+
+### Variable Scope
+
+```javascript
+// Global scope
+const globalVar = "I'm global";
+
+function outerFunction() {
+  // Function scope
+  const functionVar = "I'm in function scope";
+  
+  if (true) {
+    // Block scope (ES6+)
+    let blockVar = "I'm in block scope";
+    var functionScopedVar = "I'm function-scoped";
+  }
+  
+  // console.log(blockVar); // Error: blockVar is not accessible
+  console.log(functionScopedVar); // Works: var is function-scoped
 }
 
-// Usage
-timeout(fetchStockPrice('AAPL'), 3000)
-  .then(data => console.log('Data received:', data))
-  .catch(error => console.error('Request failed:', error));
+console.log(globalVar); // Works
+// console.log(functionVar); // Error: functionVar is not accessible
+```
+
+### Hoisting
+
+```javascript
+// Function declarations are hoisted
+hoistedFunction(); // Works: "Hello from hoisted function"
+
+function hoistedFunction() {
+  console.log("Hello from hoisted function");
+}
+
+// Variable declarations are hoisted, but not initializations
+console.log(hoistedVar); // undefined (not ReferenceError)
+var hoistedVar = "I'm hoisted";
+
+// let and const are hoisted but not initialized (Temporal Dead Zone)
+// console.log(notHoisted); // ReferenceError
+let notHoisted = "I'm not hoisted";
 ```
 
 ---
 
-## Async/Await
+## This Keyword
 
-**Async/await** is syntactic sugar over promises that makes asynchronous code look synchronous.
+### Context Binding
 
-### **Example: Trading Operations**
 ```javascript
-async function placeStockOrder(symbol, quantity, price) {
+const person = {
+  name: "John",
+  greet: function() {
+    console.log(`Hello, I'm ${this.name}`);
+  }
+};
+
+person.greet(); // "Hello, I'm John"
+
+// Context loss
+const greetFunction = person.greet;
+greetFunction(); // "Hello, I'm undefined"
+
+// Solutions
+greetFunction.call(person); // "Hello, I'm John"
+greetFunction.apply(person); // "Hello, I'm John"
+const boundGreet = greetFunction.bind(person);
+boundGreet(); // "Hello, I'm John"
+```
+
+### Arrow Functions and This
+
+```javascript
+const obj = {
+  name: "Object",
+  regularMethod: function() {
+    console.log(this.name);
+  },
+  arrowMethod: () => {
+    console.log(this.name); // undefined (this refers to global scope)
+  }
+};
+
+obj.regularMethod(); // "Object"
+obj.arrowMethod(); // undefined
+```
+
+---
+
+## Prototypes and Inheritance
+
+### Prototype Chain
+
+```javascript
+function Animal(name) {
+  this.name = name;
+}
+
+Animal.prototype.speak = function() {
+  console.log(`${this.name} makes a sound`);
+};
+
+function Dog(name, breed) {
+  Animal.call(this, name);
+  this.breed = breed;
+}
+
+// Set up inheritance
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog;
+
+Dog.prototype.bark = function() {
+  console.log(`${this.name} barks!`);
+};
+
+const dog = new Dog("Buddy", "Golden Retriever");
+dog.speak(); // "Buddy makes a sound"
+dog.bark(); // "Buddy barks!"
+```
+
+### ES6 Classes
+
+```javascript
+class Animal {
+  constructor(name) {
+    this.name = name;
+  }
+  
+  speak() {
+    console.log(`${this.name} makes a sound`);
+  }
+}
+
+class Dog extends Animal {
+  constructor(name, breed) {
+    super(name);
+    this.breed = breed;
+  }
+  
+  bark() {
+    console.log(`${this.name} barks!`);
+  }
+}
+
+const dog = new Dog("Buddy", "Golden Retriever");
+dog.speak(); // "Buddy makes a sound"
+dog.bark(); // "Buddy barks!"
+```
+
+---
+
+## Promises and Async/Await
+
+### Promises
+
+```javascript
+function fetchData() {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      const success = Math.random() > 0.5;
+      if (success) {
+        resolve("Data fetched successfully");
+      } else {
+        reject("Failed to fetch data");
+      }
+    }, 1000);
+  });
+}
+
+fetchData()
+  .then(data => console.log(data))
+  .catch(error => console.error(error));
+
+// Promise.all
+const promises = [
+  fetchData(),
+  fetchData(),
+  fetchData()
+];
+
+Promise.all(promises)
+  .then(results => console.log("All succeeded:", results))
+  .catch(error => console.error("One failed:", error));
+```
+
+### Async/Await
+
+```javascript
+async function fetchUserData() {
   try {
-    // Check if user has enough balance
-    const balance = await getUserBalance();
-    const totalCost = quantity * price;
-    
-    if (balance < totalCost) {
-      throw new Error('Insufficient balance');
-    }
-    
-    // Place the order
-    const order = await createOrder(symbol, quantity, price);
-    
-    // Update user balance
-    await updateBalance(balance - totalCost);
-    
-    return order;
+    const response = await fetch('https://api.example.com/user');
+    const user = await response.json();
+    return user;
   } catch (error) {
-    console.error('Order failed:', error);
+    console.error('Error fetching user:', error);
     throw error;
   }
 }
 
 // Usage
-async function handleBuyOrder() {
+async function displayUser() {
   try {
-    const order = await placeStockOrder('AAPL', 10, 150.00);
-    console.log('Order placed successfully:', order);
-    showSuccessMessage('Order placed!');
+    const user = await fetchUserData();
+    console.log(user);
   } catch (error) {
-    showErrorMessage(error.message);
-  }
-}
-```
-
-### **Parallel Operations with Promise.all()**
-```javascript
-async function updatePortfolioData() {
-  try {
-    const [stocks, balance, orders] = await Promise.all([
-      fetchUserStocks(),
-      getUserBalance(),
-      getRecentOrders()
-    ]);
-    
-    updatePortfolioDisplay({ stocks, balance, orders });
-  } catch (error) {
-    console.error('Failed to update portfolio:', error);
+    console.error('Failed to display user:', error);
   }
 }
 ```
 
 ---
 
-## Callback Functions
+## ES6+ Features
 
-**Callbacks** are functions passed as arguments to other functions, executed when the main function completes.
+### Destructuring
 
-### **Example: Stock Data Processing**
 ```javascript
-function fetchStockData(symbol, callback) {
-  fetch(`/api/stocks/${symbol}`)
-    .then(response => response.json())
-    .then(data => callback(null, data))
-    .catch(error => callback(error, null));
-}
+// Array destructuring
+const [first, second, ...rest] = [1, 2, 3, 4, 5];
+console.log(first); // 1
+console.log(second); // 2
+console.log(rest); // [3, 4, 5]
 
-// Usage
-fetchStockData('AAPL', (error, data) => {
-  if (error) {
-    console.error('Error:', error);
-    return;
-  }
-  console.log('Stock data:', data);
-  updateStockDisplay(data);
-});
+// Object destructuring
+const person = { name: "John", age: 30, city: "NYC" };
+const { name, age, country = "USA" } = person;
+console.log(name); // "John"
+console.log(country); // "USA" (default value)
 ```
 
-### **Callback Hell Problem**
+### Template Literals
+
 ```javascript
-// ❌ Bad - Callback Hell
-fetchStockData('AAPL', (error, stockData) => {
-  if (error) return console.error(error);
-  
-  fetchUserBalance((error, balance) => {
-    if (error) return console.error(error);
-    
-    calculateOrderCost(stockData.price, 10, (error, cost) => {
-      if (error) return console.error(error);
-      
-      placeOrder('AAPL', 10, cost, (error, order) => {
-        if (error) return console.error(error);
-        console.log('Order placed:', order);
-      });
-    });
-  });
-});
+const name = "John";
+const age = 30;
+const message = `Hello, my name is ${name} and I'm ${age} years old.`;
+console.log(message); // "Hello, my name is John and I'm 30 years old."
 ```
 
-### **Solution with Promises/Async-Await**
+### Spread and Rest Operators
+
 ```javascript
-// ✅ Good - Async/Await
-async function placeOrderWithAsync() {
-  try {
-    const stockData = await fetchStockData('AAPL');
-    const balance = await getUserBalance();
-    const cost = await calculateOrderCost(stockData.price, 10);
-    const order = await placeOrder('AAPL', 10, cost);
-    
-    console.log('Order placed:', order);
-  } catch (error) {
-    console.error('Error:', error);
-  }
+// Spread operator
+const arr1 = [1, 2, 3];
+const arr2 = [...arr1, 4, 5]; // [1, 2, 3, 4, 5]
+
+const obj1 = { name: "John" };
+const obj2 = { ...obj1, age: 30 }; // { name: "John", age: 30 }
+
+// Rest operator
+function sum(...numbers) {
+  return numbers.reduce((total, num) => total + num, 0);
 }
+
+console.log(sum(1, 2, 3, 4, 5)); // 15
 ```
 
 ---
 
-## RxJS (Reactive Extensions for JavaScript)
+## Common Patterns
 
-**RxJS** is a library for reactive programming using Observables.
+### Singleton Pattern
 
-### **Example: Real-time Stock Price Stream**
 ```javascript
-import { fromEvent, interval, merge, map, filter, switchMap } from 'rxjs';
-
-// Create observable from WebSocket
-const stockPriceStream = new Observable(observer => {
-  const ws = new WebSocket('wss://api.trading.com/prices');
+const Singleton = (function() {
+  let instance;
   
-  ws.onmessage = (event) => {
-    const data = JSON.parse(event.data);
-    observer.next(data);
-  };
-  
-  ws.onerror = (error) => observer.error(error);
-  
-  return () => ws.close();
-});
-
-// Filter for specific stock
-const applePriceStream = stockPriceStream.pipe(
-  filter(data => data.symbol === 'AAPL'),
-  map(data => data.price)
-);
-
-// Subscribe to price changes
-applePriceStream.subscribe(price => {
-  console.log('Apple price:', price);
-  updatePriceDisplay(price);
-});
-```
-
-### **Debounced Search with RxJS**
-```javascript
-import { fromEvent, debounceTime, distinctUntilChanged, switchMap } from 'rxjs';
-
-const searchInput = document.getElementById('stock-search');
-
-const searchStream = fromEvent(searchInput, 'input').pipe(
-  map(event => event.target.value),
-  debounceTime(300),
-  distinctUntilChanged(),
-  switchMap(searchTerm => fetchStocks(searchTerm))
-);
-
-searchStream.subscribe(stocks => {
-  displaySearchResults(stocks);
-});
-```
-
----
-
-## React Profiler
-
-**React Profiler** is a tool for measuring the performance of React components.
-
-### **Using React Profiler**
-```jsx
-import { Profiler } from 'react';
-
-function onRenderCallback(id, phase, actualDuration, baseDuration, startTime, commitTime) {
-  console.log(`Component ${id} took ${actualDuration}ms to render`);
-  
-  // Send to analytics
-  analytics.track('component-render', {
-    component: id,
-    duration: actualDuration,
-    phase: phase
-  });
-}
-
-function TradingDashboard() {
-  return (
-    <Profiler id="TradingDashboard" onRender={onRenderCallback}>
-      <StockList />
-      <PortfolioSummary />
-      <ChartComponent />
-    </Profiler>
-  );
-}
-```
-
-### **Custom Performance Hook**
-```javascript
-function usePerformanceMonitor(componentName) {
-  useEffect(() => {
-    const start = performance.now();
-    
-    return () => {
-      const end = performance.now();
-      const duration = end - start;
-      
-      if (duration > 16) { // Longer than one frame
-        console.warn(`${componentName} took ${duration}ms to render`);
+  function createInstance() {
+    return {
+      data: "I'm a singleton",
+      getData: function() {
+        return this.data;
       }
     };
-  });
-}
-
-// Usage
-function StockChart() {
-  usePerformanceMonitor('StockChart');
+  }
   
-  return (
-    <div>
-      {/* Chart content */}
-    </div>
-  );
-}
+  return {
+    getInstance: function() {
+      if (!instance) {
+        instance = createInstance();
+      }
+      return instance;
+    }
+  };
+})();
+
+const instance1 = Singleton.getInstance();
+const instance2 = Singleton.getInstance();
+console.log(instance1 === instance2); // true
 ```
 
----
+### Factory Pattern
 
-## Common Interview Questions
+```javascript
+function createUser(type, name) {
+  switch (type) {
+    case 'admin':
+      return {
+        name,
+        role: 'admin',
+        permissions: ['read', 'write', 'delete']
+      };
+    case 'user':
+      return {
+        name,
+        role: 'user',
+        permissions: ['read']
+      };
+    default:
+      throw new Error('Invalid user type');
+  }
+}
 
-### **1. "What's the difference between Web Workers and Service Workers?"**
-**Answer**: "Web Workers are for CPU-intensive tasks that run in the background without blocking the UI. I use them for heavy calculations like portfolio risk analysis or stock data processing. Service Workers act as network proxies, handling caching, offline functionality, and push notifications. For a trading app, I'd use Web Workers for complex financial calculations and Service Workers for caching stock data and enabling offline portfolio viewing."
+const admin = createUser('admin', 'John');
+const user = createUser('user', 'Jane');
+```
 
-### **2. "How do you handle large datasets in React?"**
-**Answer**: "I use react-window for virtual scrolling to efficiently render large lists. For example, displaying 10,000 stocks by only rendering the visible items. I also implement pagination, lazy loading, and data virtualization. For real-time data, I use Web Workers for processing and RxJS for managing data streams efficiently."
+### Observer Pattern
 
-### **3. "Explain the difference between Promises and Callbacks"**
-**Answer**: "Callbacks are functions passed as arguments that execute when an operation completes. They can lead to callback hell with nested functions. Promises provide a cleaner way to handle async operations with .then() and .catch(). Async/await makes promises even more readable by making async code look synchronous. For trading operations, I prefer async/await for order placement and balance updates."
+```javascript
+class EventEmitter {
+  constructor() {
+    this.events = {};
+  }
+  
+  on(event, callback) {
+    if (!this.events[event]) {
+      this.events[event] = [];
+    }
+    this.events[event].push(callback);
+  }
+  
+  emit(event, data) {
+    if (this.events[event]) {
+      this.events[event].forEach(callback => callback(data));
+    }
+  }
+}
 
-### **4. "What is RxJS and when would you use it?"**
-**Answer**: "RxJS is a reactive programming library that uses Observables to handle asynchronous data streams. I use it for real-time stock price updates, user input handling with debouncing, and managing complex state flows. It's particularly useful for trading apps where you need to handle multiple data streams like price feeds, order updates, and user interactions simultaneously."
+const emitter = new EventEmitter();
+emitter.on('userLogin', (user) => {
+  console.log(`User ${user.name} logged in`);
+});
 
-### **5. "How do you optimize React performance?"**
-**Answer**: "I use React Profiler to identify slow components, implement React.memo for component memoization, use useMemo for expensive calculations, and useCallback for function memoization. I also use react-window for large lists, implement code splitting with React.lazy, and use Web Workers for heavy computations. For a trading app, I'd profile chart components and portfolio calculations specifically."
-
----
-
-## Best Practices
-
-### **Performance:**
-- Use Web Workers for CPU-intensive tasks
-- Implement virtual scrolling for large lists
-- Use React Profiler to identify bottlenecks
-- Debounce user inputs with RxJS
-
-### **Error Handling:**
-- Always handle promise rejections
-- Use try-catch with async/await
-- Implement proper error boundaries
-- Log errors for debugging
-
-### **Code Organization:**
-- Prefer async/await over callbacks
-- Use RxJS for complex data streams
-- Implement proper cleanup in useEffect
-- Use TypeScript for better type safety
+emitter.emit('userLogin', { name: 'John' }); // "User John logged in"
+```
 
 ---
 
 ## Summary
 
-**Key JavaScript Concepts for Trading Apps:**
-- 🧵 **Web Workers** - Background processing for heavy calculations
-- 🔄 **Service Workers** - Offline functionality and caching
-- 📜 **React-window** - Efficient rendering of large datasets
-- 👀 **Observables** - Reactive data streams
-- ⏳ **Promises/Async-Await** - Clean async code
-- 📊 **RxJS** - Complex data stream management
-- 🔍 **React Profiler** - Performance monitoring
+**Key JavaScript Concepts:**
 
-**Remember**: Choose the right tool for the job and always consider performance implications for real-time trading applications! 
+1. **Closures** - Functions that remember their outer scope
+2. **Scope** - Variable accessibility rules
+3. **Hoisting** - Declaration lifting behavior
+4. **This** - Context binding in functions
+5. **Prototypes** - Object inheritance mechanism
+6. **Promises** - Asynchronous programming
+7. **ES6+ Features** - Modern JavaScript syntax
+8. **Design Patterns** - Reusable code solutions
+
+**Best Practices:**
+- Use `const` and `let` instead of `var`
+- Understand closure memory implications
+- Use arrow functions for concise syntax
+- Leverage destructuring for cleaner code
+- Handle promises properly with try/catch
+- Follow consistent naming conventions
+
+**Remember**: JavaScript is a powerful language with many nuances. Understanding these fundamentals will make you a better developer! 
